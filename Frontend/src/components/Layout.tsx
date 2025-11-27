@@ -1,10 +1,14 @@
-import { Outlet } from 'react-router-dom';
+import React from 'react';
 
-export default function Layout(): JSX.Element {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps): JSX.Element {
   return (
     <div>
       <main>
-        <Outlet />
+        {children}
       </main>
     </div>
   );

@@ -1,18 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
 import { Send, Users, Mail, Check, X } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
-
-interface IUser {
-  _id: string;
-  name: string;
-  email: string;
-}
+import { User } from '../../types';
 
 export default function SendEmail() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [users, setUsers] = useState<IUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const { token } = useContext(AuthContext);
@@ -20,8 +15,7 @@ export default function SendEmail() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const url = import.meta.env.VITE_API_URL;
-        const response = await fetch(`${url}/api/users`, {
+        const response = await fetch('/api/users', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -41,7 +35,6 @@ export default function SendEmail() {
     }
   }, [token]);
 
-  // Update select all when individual selections change
   useEffect(() => {
     if (users.length > 0) {
       setSelectAll(selectedUsers.length === users.length);
@@ -96,8 +89,7 @@ export default function SendEmail() {
     }
 
     try {
-      const url = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${url}/api/send-email`, {
+      const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +142,6 @@ export default function SendEmail() {
         </div>
       </div>
 
-      {/* User Selection Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Select Recipients</h2>
@@ -170,7 +161,6 @@ export default function SendEmail() {
           </div>
         </div>
 
-        {/* Select All Button */}
         <div className="mb-4">
           <button
             onClick={handleSelectAll}
@@ -185,7 +175,6 @@ export default function SendEmail() {
           </button>
         </div>
 
-        {/* Users Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto p-3 border border-gray-200 rounded bg-gray-50">
           {users.map(user => (
             <div 
@@ -213,7 +202,6 @@ export default function SendEmail() {
         </div>
       </div>
 
-      {/* Message Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-3">
@@ -236,7 +224,6 @@ export default function SendEmail() {
             </div>
           </div>
           
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <button 
               type="submit"
@@ -281,7 +268,6 @@ export default function SendEmail() {
           </div>
         </form>
         
-        {/* Status Message */}
         {status && (
           <div className={`mt-6 p-4 rounded border ${
             status.includes('✅') 

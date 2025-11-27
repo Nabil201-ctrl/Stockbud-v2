@@ -35,17 +35,30 @@ export default function StockBudLanding(): JSX.Element {
   const [targetDate, setTargetDate] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchTimer = async () => {
-      try {
-        const url = import.meta.env.VITE_API_URL;
-        const response = await fetch(`${url}/api/timer`);
-        const data = await response.json();
-        setTargetDate(new Date().getTime() + data.timer * 1000);
-      } catch (error) {
-        // Fallback to a default date if the backend is not available
-        setTargetDate(new Date("2026-01-01T00:00:00Z").getTime());
-      }
-    };
+const fetchTimer = async () => {
+  try {
+    const response = await fetch('/api/timer');
+    const data = await response.json();
+    setTargetDate(new Date().getTime() + data.timer * 1000);
+  } catch (error) {
+    setTargetDate(new Date("2026-01-01T00:00:00Z").getTime());
+  }
+};
+
+const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  // ... validation
+  try {
+    const response = await fetch('/api/signup', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email })
+    });
+    // ... handle response
+  } catch {
+    setSubmissionStatus("error");
+    setStatusMessage("Network error. Please try again later.");
+  }
+}, [name, email]);
 
     fetchTimer();
   }, []);
