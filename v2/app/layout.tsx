@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'StockBud - AI-Powered Inventory Management',
   description: 'Never Miss a Sale. Never Overstock.',
+  icons: {
+    icon: '/assets/StockBudLogo.png'
+  }
 };
 
 export default function RootLayout({
