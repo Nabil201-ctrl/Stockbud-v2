@@ -13,7 +13,7 @@ const port = parseInt(process.env.ZOHO_SMTP_PORT || process.env.SMTP_PORT || '46
 const secure = (process.env.ZOHO_SMTP_SECURE || process.env.SMTP_SECURE || 'true') === 'true';
 const user = process.env.ZOHO_SMTP_USER || process.env.SMTP_USER;
 const pass = process.env.ZOHO_SMTP_PASSWORD || process.env.SMTP_PASSWORD;
-const fromEmail = process.env.ZOHO_SMTP_FROM_EMAIL || process.env.SMTP_FROM_EMAIL || 'no-reply@stockbud.app';
+const fromEmail = process.env.ZOHO_SMTP_FROM_EMAIL || process.env.SMTP_FROM_EMAIL;
 
 const transporter = nodemailer.createTransport({
   host,

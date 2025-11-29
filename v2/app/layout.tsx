@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'StockBud - AI-Powered Inventory Management',
   description: 'Never Miss a Sale. Never Overstock.',
   icons: {
-    icon: '/assets/StockBudLogo.png'
+    icon: '/images/StockBudLogo.png'
   }
 };
 
