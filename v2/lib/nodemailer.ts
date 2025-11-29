@@ -1,17 +1,34 @@
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY as string);
+import nodemailer from 'nodemailer';
 
 interface EmailResult {
   success: boolean;
-  data?: any;
+  messageId?: string;
   error?: Error;
 }
 
+// Create a Nodemailer transporter.
+// Prefer explicit Zoho vars, but fall back to generic SMTP_* variables for compatibility.
+const host = process.env.ZOHO_SMTP_HOST || process.env.SMTP_HOST || 'smtp.zoho.com';
+const port = parseInt(process.env.ZOHO_SMTP_PORT || process.env.SMTP_PORT || '465');
+const secure = (process.env.ZOHO_SMTP_SECURE || process.env.SMTP_SECURE || 'true') === 'true';
+const user = process.env.ZOHO_SMTP_USER || process.env.SMTP_USER;
+const pass = process.env.ZOHO_SMTP_PASSWORD || process.env.SMTP_PASSWORD;
+const fromEmail = process.env.ZOHO_SMTP_FROM_EMAIL || process.env.SMTP_FROM_EMAIL || 'no-reply@stockbud.app';
+
+const transporter = nodemailer.createTransport({
+  host,
+  port,
+  secure,
+  auth: {
+    user,
+    pass,
+  },
+});
+
 export const sendWelcomeEmail = async (email: string, name: string): Promise<EmailResult> => {
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'StockBud <onboarding@resend.dev>',
+    const info = await transporter.sendMail({
+  from: `StockBud <${fromEmail}>`,
       to: email,
       subject: `🎉 Welcome to StockBud, ${name}!`,
       html: `
@@ -42,60 +59,56 @@ export const sendWelcomeEmail = async (email: string, name: string): Promise<Ema
             </div>
           </div>
         </div>
-      `
+      `,
     });
-
-    if (error) {
-      console.error('Resend error:', error);
-      return { success: false, error };
-    }
-
-    return { success: true, data };
+    console.log('Welcome email sent: %s', info.messageId);
+    return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Email sending error:', error);
+    console.error('Welcome email sending error:', error);
     return { success: false, error: error as Error };
   }
 };
 
 export const sendBulkEmail = async (
-  emails: string[], 
-  message: string, 
+  emails: string[],
+  message: string,
   subject: string = 'Important Update from StockBud'
 ): Promise<EmailResult> => {
   try {
-    const emailPromises = emails.map(email =>
-      resend.emails.send({
-        from: 'StockBud <onboarding@resend.dev>',
-        to: email,
-        subject: subject,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h2 style="color: #4F46E5; margin: 0;">StockBud Update</h2>
-            </div>
-            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border-left: 4px solid #4F46E5;">
-              ${message.replace(/\n/g, '<br>')}
-            </div>
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #6b7280;">
-              <p>This email was sent from StockBud Admin Panel</p>
-              <p>If you have any questions, please contact our support team.</p>
-            </div>
+    const info = await transporter.sendMail({
+  from: `StockBud <${fromEmail}>`,
+      to: emails.join(', '),
+      subject: subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="color: #4F46E5; margin: 0;">StockBud Update</h2>
           </div>
-        `
-      })
-    );
-
-    const results = await Promise.all(emailPromises);
-    const hasError = results.some(result => result.error);
-
-    if (hasError) {
-      console.error('Some emails failed to send');
-      return { success: false, error: new Error('Some emails failed to send') };
-    }
-
-    return { success: true, data: results };
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border-left: 4px solid #4F46E5;">
+            ${message.replace(/\n/g, '<br>')}
+          </div>
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #6b7280;">
+            <p>This email was sent from StockBud Admin Panel</p>
+            <p>If you have any questions, please contact our support team.</p>
+          </div>
+        </div>
+      `,
+    });
+    console.log('Bulk email sent: %s', info.messageId);
+    return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Bulk email sending error:', error);
     return { success: false, error: error as Error };
+  }
+};
+
+export const verifySmtpConnection = async () => {
+  try {
+    await transporter.verify();
+    console.log('SMTP connection verified successfully.');
+    return { success: true, message: 'SMTP connection verified successfully.' };
+  } catch (error) {
+    console.error('SMTP connection verification failed:', error);
+    return { success: false, message: 'SMTP connection verification failed.', error };
   }
 };

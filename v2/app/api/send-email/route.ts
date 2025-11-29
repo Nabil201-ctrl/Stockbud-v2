@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import connectDB from '../../../lib/mongodb';
 import User from '../../../models/User';
-import { sendBulkEmail } from '../../../lib/resend';
+import { sendBulkEmail } from '../../../lib/nodemailer';
 import { AuthUser } from '../../../types';
 
 export async function POST(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const { message, emails, sendToAll = false } = await request.json();
+    const { message, emails, subject, sendToAll = false } = await request.json();
 
     let recipientEmails = emails || [];
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const emailResult = await sendBulkEmail(recipientEmails, message);
+    const emailResult = await sendBulkEmail(recipientEmails, message, subject);
 
     if (!emailResult.success) {
       return NextResponse.json(
