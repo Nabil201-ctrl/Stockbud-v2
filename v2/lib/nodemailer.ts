@@ -40,12 +40,23 @@ const getOAuth2Client = (refreshToken?: string) => {
 };
 
 const buildRawMessage = (from: string, to: string, subject: string, html: string) => {
+  // Encode non-ASCII subject using RFC2047 "encoded-word" (base64) so subjects with
+  // emojis and other unicode characters render correctly in all mail clients.
+  const encodeHeader = (value: string) => {
+    // If value is pure ASCII, return as-is to keep headers readable
+    if (/^[\x00-\x7F]*$/.test(value)) return value;
+    return `=?UTF-8?B?${Buffer.from(value, 'utf8').toString('base64')}?=`;
+  };
+
+  const encodedSubject = encodeHeader(subject);
+
   const messageParts = [
     `From: ${from}`,
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodedSubject}`,
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: 8bit',
     '',
     html,
   ];
