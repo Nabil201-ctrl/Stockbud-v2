@@ -91,7 +91,8 @@ const sendRawViaGmail = async (
     },
   });
 
-  return { messageId: res.data.id };
+  const messageId = typeof res.data.id === 'string' ? res.data.id : undefined;
+  return { messageId };
 };
 
 const getRefreshTokenForSender = async (senderEmail?: string) => {
