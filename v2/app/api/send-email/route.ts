@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const emailResult = await sendBulkEmail(recipientEmails, message, subject);
+  const emailResult = await sendBulkEmail(recipientEmails, message, subject, decoded.email);
 
     if (!emailResult.success) {
       return NextResponse.json(

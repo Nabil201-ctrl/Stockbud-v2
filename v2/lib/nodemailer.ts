@@ -1,4 +1,6 @@
 import { google } from 'googleapis';
+import connectDB from './mongodb';
+import User from '../models/User';
 
 interface EmailResult {
   success: boolean;
@@ -81,6 +83,28 @@ const sendRawViaGmail = async (
   return { messageId: res.data.id };
 };
 
+const getRefreshTokenForSender = async (senderEmail?: string) => {
+  // Prefer explicit provided refresh token via env or param in getOAuth2Client.
+  // If not provided, try to look up a User record with a stored gmailRefreshToken.
+  try {
+    await connectDB();
+    if (senderEmail) {
+      const user = await User.findOne({ email: senderEmail });
+      if (user && (user as any).gmailRefreshToken) return (user as any).gmailRefreshToken as string;
+    }
+
+    // Fallback: find any admin user with a stored refresh token
+    const adminWithToken = await User.findOne({ isAdmin: true, gmailRefreshToken: { $exists: true, $ne: null } });
+    if (adminWithToken) return (adminWithToken as any).gmailRefreshToken as string;
+
+    // Final fallback to environment variable
+    return process.env.GOOGLE_REFRESH_TOKEN;
+  } catch (err) {
+    console.error('Error fetching refresh token from DB:', err);
+    return process.env.GOOGLE_REFRESH_TOKEN;
+  }
+};
+
 export const sendWelcomeEmail = async (email: string, name: string): Promise<EmailResult> => {
   try {
     const subject = `🎉 Welcome to StockBud, ${name}!`;
@@ -114,7 +138,9 @@ export const sendWelcomeEmail = async (email: string, name: string): Promise<Ema
       </div>
     `;
 
-    const { messageId } = await sendRawViaGmail(email, subject, html);
+    // Resolve refresh token from DB (admin) or env
+    const refreshToken = await getRefreshTokenForSender();
+    const { messageId } = await sendRawViaGmail(email, subject, html, undefined, refreshToken);
     console.log('Welcome email sent: %s', messageId);
     return { success: true, messageId };
   } catch (error) {
@@ -126,11 +152,13 @@ export const sendWelcomeEmail = async (email: string, name: string): Promise<Ema
 export const sendBulkEmail = async (
   emails: string[],
   message: string,
-  subject: string = 'Important Update from StockBud'
+  subject: string = 'Important Update from StockBud',
+  senderEmail?: string
 ): Promise<EmailResult> => {
   try {
     // Send individually to avoid exposing recipients to each other
     let lastMessageId: string | undefined;
+    const refreshToken = await getRefreshTokenForSender(senderEmail);
     for (const recipient of emails) {
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
@@ -147,7 +175,7 @@ export const sendBulkEmail = async (
         </div>
       `;
 
-      const { messageId } = await sendRawViaGmail(recipient, subject, html);
+      const { messageId } = await sendRawViaGmail(recipient, subject, html, undefined, refreshToken);
       lastMessageId = messageId;
       console.log('Bulk email sent to %s: %s', recipient, messageId);
     }

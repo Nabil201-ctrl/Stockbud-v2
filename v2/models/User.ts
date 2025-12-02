@@ -4,6 +4,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   googleId?: string;
+  gmailRefreshToken?: string;
   isAdmin: boolean;
   createdAt: Date;
 }
@@ -22,6 +23,10 @@ const userSchema: Schema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true
+  },
+  gmailRefreshToken: {
+    type: String,
+    required: false,
   },
   isAdmin: {
     type: Boolean,
