@@ -6,7 +6,6 @@ const adminMiddleware = require('../middleware/adminMiddleware');
 
 router.post('/signup', dataController.signup);
 router.get('/users', authMiddleware, adminMiddleware, dataController.getUsers);
-router.post('/send-email', authMiddleware, adminMiddleware, dataController.sendEmail);
 router.post('/auth/google', dataController.googleAuth);
 router.get('/timer', dataController.getTimer);
 

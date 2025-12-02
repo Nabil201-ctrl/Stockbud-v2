@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, Mail, Menu, X } from 'lucide-react';
+import { Users, Menu, X } from 'lucide-react';
 import UsersComponent from './Users';
-import SendEmailComponent from './SendEmail';
 import { useAuth } from './AuthProvider';
 import { useRouter } from 'next/navigation';
 
@@ -20,8 +19,7 @@ export default function Admin() {
   const router = useRouter();
 
   const tabs: Tab[] = [
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'send-email', label: 'Send Email', icon: Mail }
+    { id: 'users', label: 'Users', icon: Users }
   ];
 
   const handleLogout = () => {
@@ -59,23 +57,7 @@ export default function Admin() {
             <div className="p-6 border-b border-gray-200/50 text-center">
               <p className="font-semibold text-gray-800">{user.name}</p>
               <p className="text-sm text-gray-600">{user.email}</p>
-              <div className="mt-4 flex items-center justify-center space-x-2">
-                <a
-                  href={`/api/auth/google/authorize?token=${encodeURIComponent((user.email && (typeof window !== 'undefined') ? '' : '') )}`}
-                  onClick={(e) => {
-                    // If we have a token in localStorage, use it by setting location.href instead of relying on the raw href
-                    e.preventDefault();
-                    const token = localStorage.getItem('adminToken');
-                    const url = token
-                      ? `/api/auth/google/authorize?token=${encodeURIComponent(token)}`
-                      : '/api/auth/google/authorize';
-                    window.location.href = url;
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                >
-                  Connect Gmail
-                </a>
-
+              <div className="mt-4">
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
@@ -140,7 +122,6 @@ export default function Admin() {
               <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 p-8 min-h-[calc(100vh-12rem)]">
                 <div className="animate-fade-in">
                   {activeTab === 'users' && <UsersComponent />}
-                  {activeTab === 'send-email' && <SendEmailComponent />}
                 </div>
               </div>
             </div>
